@@ -1,4 +1,4 @@
-const { ClobClient, Side, OrderType } = require("@polymarket/clob-client");
+const { ClobClient, Side, OrderType, SignatureType } = require("@polymarket/clob-client");
 const { Wallet } = require("ethers");
 
 const HOST = "https://clob.polymarket.com";
@@ -17,8 +17,8 @@ async function poly_init() {
     CHAIN_ID,
     signer,
     creds,
-    0,      // signatureType: 0 = EOA wallet (MetaMask etc), 1 = Polymarket proxy/email
-    funder
+    SignatureType.POLY_PROXY,  // signatureType for Polymarket proxy (email login)
+    funder  // כתובת ה-Proxy שבה יש את ה-USDC
   );
 
 }
