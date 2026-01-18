@@ -31,7 +31,7 @@ async function poly_init() {
     CHAIN_ID,
     signer,
     finalCreds,
-    2,      // signatureType: 2 = POLY_PROXY
+    1,      // signatureType: 1 = POLY_GNOSIS_SAFE
     funder  // כתובת ה-Proxy שבה יש את ה-USDC
   );
 
