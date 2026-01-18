@@ -3,10 +3,12 @@
   "version": "1.0.2",
   "description": "polymarket_exe",
   "author": "First Last <first.last@example.com>",
-  "main": "index.js",
+  "main": "polymarket_exe.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node polymarket_exe.js"
   },
   "dependencies": {
+    "@polymarket/clob-client": "^4.22.8",
+    "ethers": "^5.8.0"
   }
 }
