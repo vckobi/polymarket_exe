@@ -13,11 +13,11 @@ async function poly_init() {
   const tempClient = new ClobClient(HOST, CHAIN_ID, signer);
   const creds = await tempClient.createOrDeriveApiKey();
   poly_client = new ClobClient(
-    HOST, 
-    CHAIN_ID, 
-    signer, 
-    creds, 
-    1,      // signatureType: 1 = server-side/email
+    HOST,
+    CHAIN_ID,
+    signer,
+    creds,
+    0,      // signatureType: 0 = EOA wallet (MetaMask etc), 1 = Polymarket proxy/email
     funder
   );
 
