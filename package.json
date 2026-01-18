@@ -1,0 +1,12 @@
+{
+  "name": "polymarket_exe",
+  "version": "1.0.2",
+  "description": "polymarket_exe",
+  "author": "First Last <first.last@example.com>",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+  }
+}
