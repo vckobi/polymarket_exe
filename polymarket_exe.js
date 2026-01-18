@@ -133,8 +133,7 @@ if (check.enough) {
   console.log(`   price: ${orderPrice}`);
   console.log(`   size: ${orderSize}`);
   console.log(`   side: BUY`);
-  return;
-
+ 
   const response = await poly_client.createAndPostOrder(
     {
       tokenID,
