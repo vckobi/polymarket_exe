@@ -147,6 +147,8 @@ if (check.enough) {
   console.log(`   price: ${orderPrice}`);
   console.log(`   size: ${orderSize}`);
   console.log(`   side: BUY`);
+
+  return;
  
   const response = await poly_client.createAndPostOrder(
     {
@@ -157,6 +159,23 @@ if (check.enough) {
       orderType: "IOC"
     } 
   );
+
+
+  
+
+  /*
+Order response: {
+  "errorMsg": "",
+  "orderID": "0xc0dc3d7b1524ffbc94b0ece9feef95b7470c7c16a56b786f86a6119e4987b426",
+  "takingAmount": "12",
+  "makingAmount": "9.24",
+  "status": "matched",
+  "transactionsHashes": [
+    "0x7b8afd534024c298332aa8235237d2d13c6250299feab6968f1cc2caad7967a6"
+  ],
+  "success": true
+}
+*/
 
   console.log("\nOrder response:", JSON.stringify(response, null, 2));
 
