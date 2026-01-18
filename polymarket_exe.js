@@ -7,16 +7,30 @@ const CHAIN_ID = 137;
 const privateKey =  process.env.privateKey || "";
 const funder = process.env.funder || "";  
 
-var poly_client={}; 
+var poly_client={};
 async function poly_init() {
-  const signer = new Wallet(privateKey);
-  const tempClient = new ClobClient(HOST, CHAIN_ID, signer);
-  const creds = await tempClient.createOrDeriveApiKey();
+  const signer = new Wallet(privateKey); 
+
+  // אם יש לך API creds מהדפדפן, שים אותם כאן:
+  const creds = {
+    key: process.env.POLY_API_KEY || "",
+    secret: process.env.POLY_SECRET || "",
+    passphrase: process.env.POLY_PASSPHRASE || ""
+  };
+
+  // אם אין creds מהדפדפן, צור חדשים:
+  let finalCreds = creds;
+  if (!creds.key) {
+    const tempClient = new ClobClient(HOST, CHAIN_ID, signer);
+    finalCreds = await tempClient.createOrDeriveApiKey();
+    console.log("Created new creds:", JSON.stringify(finalCreds, null, 2));
+  }
+
   poly_client = new ClobClient(
     HOST,
     CHAIN_ID,
     signer,
-    creds,
+    finalCreds,
     2,      // signatureType: 2 = POLY_PROXY
     funder  // כתובת ה-Proxy שבה יש את ה-USDC
   );
