@@ -12,6 +12,6 @@ var poly_client={};
 console.log(privateKey);
 console.log(funder); 
 
-setInterval(async () => {
+setInterval(async () => { 
  
 }, 1000);
