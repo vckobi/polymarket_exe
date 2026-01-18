@@ -4,8 +4,8 @@ const { Wallet } = require("ethers");
 const HOST = "https://clob.polymarket.com";
 const CHAIN_ID = 137;
 
-const privateKey =  process.env.privateKey || "";
-const funder = process.env.funder || "";  
+const privateKey =  process.env.privateKey || ""; //https://reveal.magic.link/polymarket
+const funder = process.env.funder || "";  //localStorage.getItem('polymarket.auth.proxyWallet')
 
 var poly_client={};
 async function poly_init() {
@@ -154,7 +154,7 @@ if (check.enough) {
       price: orderPrice,
       side: Side.BUY,
       size: orderSize,
-      orderType: OrderType.GTC 
+      orderType: "IOC"
     } 
   );
 
