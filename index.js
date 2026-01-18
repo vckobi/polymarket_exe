@@ -1,3 +1,3 @@
 setInterval(async () => {
- console.log("Running polymarket_exe/index.js");
+ console.log("Running polymarddndex.js");
 }, 1000);
