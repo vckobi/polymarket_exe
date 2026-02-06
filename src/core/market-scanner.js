@@ -12,9 +12,11 @@ let lastScanTime = 0;
 const CACHE_TTL = 30000; // 30 seconds cache
 
 /**
- * Check if a market matches 15-minute crypto criteria
+ * Check if a market matches crypto criteria
+ * If requireTimeframe is false, matches ANY crypto market
+ * If requireTimeframe is true, only matches 15-minute markets
  */
-function isTargetMarket(market, activeCurrencies) {
+function isTargetMarket(market, activeCurrencies, requireTimeframe = false) {
   const question = (market.question || '').toLowerCase();
   const description = (market.description || '').toLowerCase();
   const combinedText = question + ' ' + description;
@@ -26,13 +28,14 @@ function isTargetMarket(market, activeCurrencies) {
 
   if (!hasCrypto) return false;
 
-  // Check for 15-minute timeframe
-  const { timeframePatterns } = config.marketFilters;
-  const has15Min = timeframePatterns.some(pattern =>
-    pattern.test(combinedText)
-  );
-
-  if (!has15Min) return false;
+  // Check for timeframe only if required
+  if (requireTimeframe) {
+    const { timeframePatterns } = config.marketFilters;
+    const has15Min = timeframePatterns.some(pattern =>
+      pattern.test(combinedText)
+    );
+    if (!has15Min) return false;
+  }
 
   // Check if market is still open (not resolved/closed)
   if (market.closed === true || market.resolved === true) {
@@ -91,8 +94,11 @@ async function scanMarkets() {
 
     const targetMarkets = [];
 
+    // For now, don't require 15-min timeframe - show all crypto markets
+    const requireTimeframe = false;
+
     for (const market of allMarkets) {
-      if (isTargetMarket(market, activeCurrencies)) {
+      if (isTargetMarket(market, activeCurrencies, requireTimeframe)) {
         const { yesTokenId, noTokenId } = extractTokenIds(market);
 
         if (yesTokenId && noTokenId) {
@@ -112,7 +118,7 @@ async function scanMarkets() {
       }
     }
 
-    console.log(`[Scanner] Found ${targetMarkets.length} target 15-min crypto markets`);
+    console.log(`[Scanner] Found ${targetMarkets.length} crypto markets`);
 
     cachedMarkets = targetMarkets;
     lastScanTime = now;
