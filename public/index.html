@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polymarket MM Bot</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <h1>Polymarket MM Bot</h1>
+        <span class="badge" id="mode-badge">Manual</span>
+      </div>
+      <div class="header-right">
+        <div class="balance-display">
+          <span class="label">Balance:</span>
+          <span class="value" id="balance-value">$0.00</span>
+        </div>
+        <div class="connection-status" id="connection-status">
+          <span class="dot"></span>
+          <span class="text">Disconnected</span>
+        </div>
+        <button class="kill-switch-btn" id="kill-switch-btn">
+          KILL SWITCH
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Stats Row -->
+      <section class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Today's P&L</div>
+          <div class="stat-value" id="today-pnl">$0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Open Positions</div>
+          <div class="stat-value" id="open-positions">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Trades</div>
+          <div class="stat-value" id="total-trades">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Win Rate</div>
+          <div class="stat-value" id="win-rate">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">All-Time P&L</div>
+          <div class="stat-value" id="all-time-pnl">$0.00</div>
+        </div>
+      </section>
+
+      <!-- Two Column Layout -->
+      <div class="content-grid">
+        <!-- Left Column -->
+        <div class="column">
+          <!-- Opportunities Panel -->
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Pending Opportunities</h2>
+              <span class="badge" id="opportunities-count">0</span>
+            </div>
+            <div class="panel-content">
+              <div class="opportunity-list" id="opportunity-list">
+                <div class="empty-state">No opportunities detected</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Order Book Panel -->
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Order Book Monitor</h2>
+              <select id="orderbook-market-select">
+                <option value="">Select a market...</option>
+              </select>
+            </div>
+            <div class="panel-content">
+              <div class="orderbook-container">
+                <div class="orderbook-side">
+                  <h3>YES</h3>
+                  <div class="orderbook-header">
+                    <span>Price</span>
+                    <span>Size</span>
+                  </div>
+                  <div class="orderbook-asks" id="yes-asks"></div>
+                  <div class="orderbook-spread" id="yes-spread">Spread: -</div>
+                  <div class="orderbook-bids" id="yes-bids"></div>
+                </div>
+                <div class="orderbook-side">
+                  <h3>NO</h3>
+                  <div class="orderbook-header">
+                    <span>Price</span>
+                    <span>Size</span>
+                  </div>
+                  <div class="orderbook-asks" id="no-asks"></div>
+                  <div class="orderbook-spread" id="no-spread">Spread: -</div>
+                  <div class="orderbook-bids" id="no-bids"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Right Column -->
+        <div class="column">
+          <!-- Trade History Panel -->
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Trade History</h2>
+              <button class="btn-small" id="refresh-trades-btn">Refresh</button>
+            </div>
+            <div class="panel-content">
+              <table class="trades-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Market</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                    <th>P&L</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="trades-tbody">
+                  <tr class="empty-row">
+                    <td colspan="6">No trades yet</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Settings Panel -->
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Bot Settings</h2>
+            </div>
+            <div class="panel-content">
+              <form id="settings-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="position-size">Position Size ($)</label>
+                    <input type="number" id="position-size" step="0.1" min="0.1" value="0.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="profit-threshold">Profit Threshold (%)</label>
+                    <input type="number" id="profit-threshold" step="0.1" min="0.1" value="1">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="daily-loss-limit">Daily Loss Limit ($)</label>
+                    <input type="number" id="daily-loss-limit" step="1" min="0" value="50">
+                  </div>
+                  <div class="form-group">
+                    <label for="max-positions">Max Open Positions</label>
+                    <input type="number" id="max-positions" step="1" min="1" value="10">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="auto-mode">Trading Mode</label>
+                  <select id="auto-mode">
+                    <option value="0">Semi-Automatic (Approval Required)</option>
+                    <option value="1">Fully Automatic</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Active Currencies</label>
+                  <div class="checkbox-group" id="currencies-group">
+                    <label><input type="checkbox" value="BTC" checked> BTC</label>
+                    <label><input type="checkbox" value="ETH" checked> ETH</label>
+                    <label><input type="checkbox" value="SOL"> SOL</label>
+                    <label><input type="checkbox" value="DOGE"> DOGE</label>
+                    <label><input type="checkbox" value="XRP"> XRP</label>
+                    <label><input type="checkbox" value="ADA"> ADA</label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="scan-interval">Scan Interval (seconds)</label>
+                  <input type="number" id="scan-interval" step="1" min="1" value="5">
+                </div>
+
+                <button type="submit" class="btn-primary">Save Settings</button>
+              </form>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Alerts Panel -->
+      <section class="panel alerts-panel">
+        <div class="panel-header">
+          <h2>Alerts</h2>
+          <div class="alerts-actions">
+            <span class="badge" id="unread-count">0</span>
+            <button class="btn-small" id="mark-all-read-btn">Mark All Read</button>
+          </div>
+        </div>
+        <div class="panel-content">
+          <div class="alerts-list" id="alerts-list">
+            <div class="empty-state">No alerts</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

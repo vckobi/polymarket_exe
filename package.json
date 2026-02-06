@@ -1,14 +1,18 @@
 {
-  "name": "polymarket_exe",
-  "version": "1.0.2",
-  "description": "polymarket_exe",
-  "author": "First Last <first.last@example.com>",
-  "main": "polymarket_exe.js",
+  "name": "polymarket-mm-bot",
+  "version": "1.0.0",
+  "description": "Market making bot for Polymarket 15-minute crypto markets",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node polymarket_exe.js"
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
   },
   "dependencies": {
     "@polymarket/clob-client": "^4.22.8",
-    "ethers": "^5.8.0"
+    "better-sqlite3": "^9.2.2",
+    "dotenv": "^16.3.1",
+    "ethers": "^5.8.0",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
   }
 }
