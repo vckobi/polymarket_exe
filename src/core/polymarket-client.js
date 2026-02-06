@@ -9,6 +9,11 @@ const config = require('../config');
 
 let client = null;
 
+// Market cache to avoid rate limits (60 req/10sec)
+let marketsCache = [];
+let marketsCacheTime = 0;
+const MARKETS_CACHE_TTL = 120000; // 2 minute cache
+
 /**
  * Initialize the Polymarket CLOB client
  */
@@ -63,20 +68,58 @@ function getClient() {
 }
 
 /**
- * Get all markets with pagination
+ * Get all markets with pagination (with caching to avoid rate limits)
  */
 async function getAllMarkets() {
+  // Return cache if fresh
+  const now = Date.now();
+  if (marketsCache.length > 0 && (now - marketsCacheTime) < MARKETS_CACHE_TTL) {
+    console.log(`[Polymarket] Using cached markets (${marketsCache.length} markets)`);
+    return marketsCache;
+  }
+
   const c = getClient();
   let allMarkets = [];
   let cursor = null;
+  let pageCount = 0;
 
-  do {
-    const response = await c.getMarkets(cursor);
-    allMarkets = allMarkets.concat(response.data || []);
-    cursor = response.next_cursor;
-  } while (cursor && cursor !== 'LTE=');
+  console.log('[Polymarket] Fetching all markets (this may take a moment)...');
 
-  return allMarkets;
+  try {
+    do {
+      const response = await c.getMarkets(cursor);
+      allMarkets = allMarkets.concat(response.data || []);
+      cursor = response.next_cursor;
+      pageCount++;
+
+      // Rate limit protection: wait 250ms between requests
+      if (cursor && cursor !== 'LTE=') {
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+
+      // Safety limit: max 150 pages
+      if (pageCount >= 150) {
+        console.log('[Polymarket] Reached page limit');
+        break;
+      }
+    } while (cursor && cursor !== 'LTE=');
+
+    // Update cache
+    marketsCache = allMarkets;
+    marketsCacheTime = now;
+    console.log(`[Polymarket] Fetched ${allMarkets.length} markets in ${pageCount} pages`);
+
+    return allMarkets;
+  } catch (error) {
+    // On rate limit, return cached data
+    if (error.message?.includes('429') || error.message?.includes('Too Many')) {
+      console.log('[Polymarket] Rate limited, using cached markets');
+      if (marketsCache.length > 0) {
+        return marketsCache;
+      }
+    }
+    throw error;
+  }
 }
 
 /**

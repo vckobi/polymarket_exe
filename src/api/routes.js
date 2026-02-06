@@ -167,6 +167,33 @@ function setupRoutes(app, emitter) {
     }
   });
 
+  // Debug: Get all crypto markets (without 15-min filter)
+  router.get('/markets/debug', async (req, res) => {
+    try {
+      const allMarkets = await polyClient.getAllMarkets();
+      const settings = db.settings.get();
+      const currencies = settings.active_currencies || ['BTC', 'ETH'];
+
+      // Find crypto markets
+      const cryptoMarkets = allMarkets.filter(m => {
+        const q = (m.question || '').toLowerCase();
+        return currencies.some(c => q.includes(c.toLowerCase()));
+      }).filter(m => !m.closed && !m.resolved);
+
+      res.json({
+        total: allMarkets.length,
+        crypto_count: cryptoMarkets.length,
+        samples: cryptoMarkets.slice(0, 20).map(m => ({
+          question: m.question,
+          closed: m.closed,
+          resolved: m.resolved
+        }))
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get order book for a market
   router.get('/orderbook/:yesTokenId/:noTokenId', async (req, res) => {
     try {
