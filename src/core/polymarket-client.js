@@ -66,7 +66,7 @@ function getClient() {
   }
   return client;
 }
-
+ 
 /**
  * Get all markets with pagination (with caching to avoid rate limits)
  */
@@ -124,10 +124,19 @@ async function getAllMarkets() {
 
 /**
  * Get order book for a token
+ * Returns empty order book if not found (404)
  */
 async function getOrderBook(tokenId) {
   const c = getClient();
-  return await c.getOrderBook(tokenId);
+  try {
+    return await c.getOrderBook(tokenId);
+  } catch (error) {
+    // Return empty order book for 404 errors
+    if (error.message?.includes('404') || error.response?.status === 404) {
+      return { bids: [], asks: [] };
+    }
+    throw error;
+  }
 }
 
 /**

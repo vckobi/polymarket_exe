@@ -102,7 +102,10 @@ async function analyzeMarket(market) {
     };
 
   } catch (error) {
-    console.error(`[Detector] Error analyzing market ${market.conditionId}:`, error.message);
+    // Silently ignore 404 errors (no order book) - these are common
+    if (!error.message?.includes('404') && !error.message?.includes('No orderbook')) {
+      console.error(`[Detector] Error analyzing market ${market.conditionId}:`, error.message);
+    }
     return null;
   }
 }
@@ -136,16 +139,33 @@ function saveSnapshot(marketId, tokenId, tokenType, orderBook) {
 
 /**
  * Scan all markets and detect opportunities
+ * Only analyzes markets with liquidity to avoid 404 errors
  */
 async function detectOpportunities(markets) {
   const opportunities = [];
 
-  for (const market of markets) {
+  // Filter markets with liquidity first
+  const marketsWithLiquidity = markets.filter(m => {
+    const liquidity = parseFloat(m.liquidity) || 0;
+    return liquidity > 0;
+  });
+
+  console.log(`[Detector] Analyzing ${marketsWithLiquidity.length} markets with liquidity (out of ${markets.length})`);
+
+  // Limit to top 20 markets by liquidity to avoid rate limits
+  const topMarkets = marketsWithLiquidity
+    .sort((a, b) => (parseFloat(b.liquidity) || 0) - (parseFloat(a.liquidity) || 0))
+    .slice(0, 20);
+
+  for (const market of topMarkets) {
     const opportunity = await analyzeMarket(market);
     if (opportunity) {
       opportunities.push(opportunity);
       console.log(`[Detector] Opportunity found: ${market.question?.substring(0, 50)}... spread: ${(opportunity.spread * 100).toFixed(2)}%`);
     }
+
+    // Small delay between order book requests to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   // Sort by spread (best opportunities first)
