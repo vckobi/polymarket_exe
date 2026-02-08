@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS settings (
     daily_loss_limit REAL DEFAULT 50.0,
     max_open_positions INTEGER DEFAULT 10,
     active_currencies TEXT DEFAULT '["BTC","ETH"]',
-    scan_interval_ms INTEGER DEFAULT 30000,
+    scan_interval_ms INTEGER DEFAULT 60000,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

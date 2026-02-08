@@ -24,17 +24,26 @@ const emitter = new EventEmitter();
 
 // Scanning interval reference
 let scanInterval = null;
+let isScanning = false; // Lock to prevent overlapping scans
 
 /**
  * Main scanning loop
  */
 async function runScanningLoop() {
+  // Prevent overlapping scans
+  if (isScanning) {
+    console.log('[Scanner] Scan already in progress, skipping...');
+    return;
+  }
+
   const settings = db.settings.get();
 
   // Skip if kill switch is active
   if (settings.kill_switch) {
     return;
   }
+
+  isScanning = true;
 
   try {
     // Check risk conditions
@@ -108,6 +117,8 @@ async function runScanningLoop() {
       severity: 'error',
       message: `Scanning error: ${error.message}`
     });
+  } finally {
+    isScanning = false;
   }
 }
 

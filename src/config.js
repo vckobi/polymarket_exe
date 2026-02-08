@@ -38,7 +38,7 @@ const config = {
     dailyLossLimit: 50.0,     // $ max daily loss
     maxOpenPositions: 10,
     activeCurrencies: ['BTC', 'ETH'],
-    scanIntervalMs: 30000     // 30 seconds (to avoid rate limits)
+    scanIntervalMs: 60000     // 60 seconds (scanning takes time)
   },
 
   // Market filter patterns for 15-min crypto markets
