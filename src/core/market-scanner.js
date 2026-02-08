@@ -1,9 +1,10 @@
 /**
  * Market Scanner
  * Scans Polymarket for 15-minute crypto prediction markets
+ * Uses Gamma API for market data (no auth required)
  */
 
-const polyClient = require('./polymarket-client');
+const gammaApi = require('./gamma-api');
 const config = require('../config');
 const db = require('../database');
 
@@ -38,7 +39,11 @@ function isTargetMarket(market, activeCurrencies, requireTimeframe = false) {
   }
 
   // Check if market is still open (not resolved/closed)
+  // Gamma API uses 'active' field, CLOB uses 'closed'
   if (market.closed === true || market.resolved === true) {
+    return false;
+  }
+  if (market.active === false) {
     return false;
   }
 
@@ -47,6 +52,7 @@ function isTargetMarket(market, activeCurrencies, requireTimeframe = false) {
 
 /**
  * Extract YES and NO token IDs from market data
+ * Handles both Gamma API and CLOB API response formats
  */
 function extractTokenIds(market) {
   // Markets have tokens array with outcomes
@@ -58,16 +64,22 @@ function extractTokenIds(market) {
   for (const token of tokens) {
     const outcome = (token.outcome || '').toLowerCase();
     if (outcome === 'yes') {
-      yesTokenId = token.token_id;
+      yesTokenId = token.token_id || token.tokenId;
     } else if (outcome === 'no') {
-      noTokenId = token.token_id;
+      noTokenId = token.token_id || token.tokenId;
     }
   }
 
-  // Some markets use clobTokenIds
+  // Fallback: clobTokenIds array (Gamma API format)
   if (!yesTokenId && market.clobTokenIds) {
     yesTokenId = market.clobTokenIds[0];
     noTokenId = market.clobTokenIds[1];
+  }
+
+  // Fallback: clob_token_ids (snake_case format)
+  if (!yesTokenId && market.clob_token_ids) {
+    yesTokenId = market.clob_token_ids[0];
+    noTokenId = market.clob_token_ids[1];
   }
 
   return { yesTokenId, noTokenId };
@@ -86,10 +98,10 @@ async function scanMarkets() {
     return cachedMarkets;
   }
 
-  console.log('[Scanner] Scanning markets...');
+  console.log('[Scanner] Scanning markets via Gamma API...');
 
   try {
-    const allMarkets = await polyClient.getAllMarkets();
+    const allMarkets = await gammaApi.fetchAllMarkets();
     console.log(`[Scanner] Found ${allMarkets.length} total markets`);
 
     const targetMarkets = [];
@@ -103,16 +115,16 @@ async function scanMarkets() {
 
         if (yesTokenId && noTokenId) {
           targetMarkets.push({
-            conditionId: market.condition_id || market.conditionId,
+            conditionId: market.condition_id || market.conditionId || market.id,
             question: market.question,
             description: market.description,
             yesTokenId,
             noTokenId,
-            endDate: market.end_date_iso || market.endDateIso,
-            closed: market.closed,
+            endDate: market.end_date_iso || market.endDateIso || market.endDate,
+            closed: market.closed || market.active === false,
             resolved: market.resolved,
-            volume: market.volume,
-            liquidity: market.liquidity
+            volume: market.volume || market.volumeNum || 0,
+            liquidity: market.liquidity || market.liquidityNum || 0
           });
         }
       }
@@ -139,20 +151,20 @@ async function getMarketById(conditionId) {
   const cached = cachedMarkets.find(m => m.conditionId === conditionId);
   if (cached) return cached;
 
-  // Fetch from API
-  const market = await polyClient.getMarket(conditionId);
+  // Fetch from Gamma API
+  const market = await gammaApi.getMarket(conditionId);
   if (!market) return null;
 
   const { yesTokenId, noTokenId } = extractTokenIds(market);
 
   return {
-    conditionId: market.condition_id || market.conditionId,
+    conditionId: market.condition_id || market.conditionId || market.id,
     question: market.question,
     description: market.description,
     yesTokenId,
     noTokenId,
-    endDate: market.end_date_iso || market.endDateIso,
-    closed: market.closed,
+    endDate: market.end_date_iso || market.endDateIso || market.endDate,
+    closed: market.closed || market.active === false,
     resolved: market.resolved
   };
 }
@@ -163,6 +175,7 @@ async function getMarketById(conditionId) {
 function clearCache() {
   cachedMarkets = [];
   lastScanTime = 0;
+  gammaApi.clearCache();
 }
 
 module.exports = {

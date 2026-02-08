@@ -149,6 +149,9 @@ function stopScanning() {
   }
 }
 
+// Track if trading is enabled (has credentials)
+let tradingEnabled = false;
+
 /**
  * Main function
  */
@@ -162,13 +165,23 @@ async function main() {
     console.log('[Init] Initializing database...');
     db.initDatabase();
 
-    // Initialize Polymarket client
-    console.log('[Init] Initializing Polymarket client...');
-    await polyClient.initPolymarketClient();
-
-    // Check balance
-    const balance = await polyClient.getBalance();
-    console.log(`[Init] Balance: $${balance.balance.toFixed(2)}`);
+    // Initialize Polymarket client (optional - for trading)
+    let balance = { balance: 0, allowance: 0 };
+    if (config.polymarket.privateKey) {
+      console.log('[Init] Initializing Polymarket client...');
+      try {
+        await polyClient.initPolymarketClient();
+        tradingEnabled = true;
+        balance = await polyClient.getBalance();
+        console.log(`[Init] Balance: $${balance.balance.toFixed(2)}`);
+      } catch (error) {
+        console.warn('[Init] Failed to initialize trading client:', error.message);
+        console.log('[Init] Running in VIEW-ONLY mode (no trading)');
+      }
+    } else {
+      console.log('[Init] No POLY_PRIVATE_KEY set - running in VIEW-ONLY mode');
+      console.log('[Init] Set credentials in .env to enable trading');
+    }
 
     // Create Express app
     const app = express();
