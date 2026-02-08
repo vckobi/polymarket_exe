@@ -139,23 +139,21 @@ function saveSnapshot(marketId, tokenId, tokenType, orderBook) {
 
 /**
  * Scan all markets and detect opportunities
- * Only analyzes markets with liquidity to avoid 404 errors
  */
 async function detectOpportunities(markets) {
   const opportunities = [];
 
-  // Filter markets with liquidity first
-  const marketsWithLiquidity = markets.filter(m => {
-    const liquidity = parseFloat(m.liquidity) || 0;
-    return liquidity > 0;
-  });
+  // Just take the first 20 markets to analyze (to avoid rate limits)
+  // We'll analyze ALL of them since liquidity field might not be available
+  const topMarkets = markets.slice(0, 20);
 
-  console.log(`[Detector] Analyzing ${marketsWithLiquidity.length} markets with liquidity (out of ${markets.length})`);
+  console.log(`[Detector] Analyzing ${topMarkets.length} markets (out of ${markets.length})`);
 
-  // Limit to top 20 markets by liquidity to avoid rate limits
-  const topMarkets = marketsWithLiquidity
-    .sort((a, b) => (parseFloat(b.liquidity) || 0) - (parseFloat(a.liquidity) || 0))
-    .slice(0, 20);
+  // Log first market structure for debugging
+  if (markets.length > 0) {
+    const sample = markets[0];
+    console.log(`[Detector] Sample market fields: ${Object.keys(sample).join(', ')}`);
+  }
 
   for (const market of topMarkets) {
     const opportunity = await analyzeMarket(market);

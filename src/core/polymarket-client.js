@@ -65,7 +65,7 @@ function getClient() {
     throw new Error('Polymarket client not initialized. Call initPolymarketClient() first.');
   }
   return client;
-}
+} 
  
 /**
  * Get all markets with pagination (with caching to avoid rate limits)
